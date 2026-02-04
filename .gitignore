@@ -1,0 +1,32 @@
+# Sensitive files
+.ssh/*_rsa
+.ssh/*_rsa.pub
+.ssh/id_*
+.ssh/known_hosts
+.netrc
+.aws/credentials
+.claude.json*
+
+# History and cache files
+.zsh_history
+.bash_history
+.zcompdump*
+.viminfo
+.lesshst
+.psql_history
+.python_history
+.node_repl_history
+
+# Package managers and large directories
+.oh-my-zsh/
+.nvm/
+.npm/
+.node-gyp/
+.rbenv/
+.composer/
+.cargo/
+node_modules/
+
+# OS files
+.DS_Store
+.Trash/
