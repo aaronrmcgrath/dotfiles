@@ -5,9 +5,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
     source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:$PATH
-
 # If you come from bash you might have to change your $PATH
 export PATH=$HOME/bin:/usr/local/bin:$PATH:$HOME/.bin
 export PATH=$PATH:~/.composer/vendor/bin
@@ -56,8 +53,6 @@ plugins=(
     #zsh-autosuggestions
 )
 
-export FZF_BASE=/path/to/fzf/install/dir
-export FZF_DEFAULT_COMMAND='<fzf working...>'
 DISABLE_FZF_AUTO_COMPLETION="false"
 DISABLE_FZF_KEY_BINDINGS="false"
 
@@ -98,11 +93,7 @@ alias garden="cd ~/Documents/Atom_Projects/Projects/home_grown/homegrownv2/"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-
-export NVM_DIR="$([ -z"${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM/nvm.sh" ] && \. "$NVM/nvm.sh"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load

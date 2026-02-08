@@ -1,4 +1,5 @@
 # Sensitive files
+.gitconfig
 .ssh/*_rsa
 .ssh/*_rsa.pub
 .ssh/id_*
@@ -6,6 +7,7 @@
 .netrc
 .aws/credentials
 .claude.json*
+.env
 
 # History and cache files
 .zsh_history
@@ -26,6 +28,12 @@
 .composer/
 .cargo/
 node_modules/
+
+# Bare repo
+.dotfiles/
+
+# Tool installs
+.fly/
 
 # OS files
 .DS_Store

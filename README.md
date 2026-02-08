@@ -78,6 +78,7 @@
   .netrc
   .aws/credentials
   .claude.json*
+  .env
 
   # History and cache files
   .zsh_history
@@ -98,6 +99,12 @@
   .composer/
   .cargo/
   node_modules/
+
+  # Bare repo
+  .dotfiles/
+
+  # Tool installs
+  .fly/
 
   # OS files
   .DS_Store
@@ -258,7 +265,6 @@
   dotfiles checkout
 
   # If checkout fails due to conflicts, backup those files:
-  # Note: this flattens directory structure into .dotfiles-backup/
   dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
     xargs -I{} sh -c 'mkdir -p .dotfiles-backup/$(dirname "{}") && mv {} .dotfiles-backup/{}'
 
