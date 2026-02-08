@@ -179,5 +179,5 @@ eval $(thefuck --alias)
 export PATH="$HOME/.local/bin:$PATH"
 
 # Added by flyctl installer
-export FLYCTL_INSTALL="\$HOME/.fly"
+export FLYCTL_INSTALL="$HOME/.fly"
 export PATH="$FLYCTL_INSTALL/bin:$PATH"
