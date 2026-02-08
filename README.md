@@ -9,6 +9,7 @@
   - [Daily Usage](#daily-usage)
   - [Adding Files and Directories](#adding-files-and-directories)
   - [Setting Up on a New Machine](#setting-up-on-a-new-machine)
+  - [Syncing an Existing Machine](#syncing-an-existing-machine)
   - [Important Notes](#important-notes)
   - [Troubleshooting](#troubleshooting)
 
@@ -69,6 +70,7 @@
 
   ```bash
   # Sensitive files
+  .gitconfig
   .ssh/*_rsa
   .ssh/*_rsa.pub
   .ssh/id_*
@@ -152,14 +154,20 @@
   # Check status
   dotfiles status
 
+  # Review changes before committing
+  dotfiles diff
+
   # Add a file
-  dotfiles add ~/.gitconfig
+  dotfiles add ~/.zshrc
 
   # Commit changes
-  dotfiles commit -m "Update git configuration"
+  dotfiles commit -m "Update shell configuration"
 
   # Push to GitHub
   dotfiles push
+
+  # Pull changes from another machine
+  dotfiles pull
 
   # View commit history
   dotfiles log
@@ -173,9 +181,9 @@
   ### Adding Individual Files
 
   ```bash
-  dotfiles add ~/.gitconfig
   dotfiles add ~/.p10k.zsh
-  dotfiles commit -m "Add git and powerlevel10k config"
+  dotfiles add ~/.tmux.conf
+  dotfiles commit -m "Add powerlevel10k and tmux config"
   dotfiles push
   ```
 
@@ -250,8 +258,9 @@
   dotfiles checkout
 
   # If checkout fails due to conflicts, backup those files:
+  # Note: this flattens directory structure into .dotfiles-backup/
   dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
-    xargs -I{} mv {} .dotfiles-backup/{}
+    xargs -I{} sh -c 'mkdir -p .dotfiles-backup/$(dirname "{}") && mv {} .dotfiles-backup/{}'
 
   # Try checkout again
   dotfiles checkout
@@ -285,6 +294,27 @@
 
   You're done! Your dotfiles are now managed on the new machine.
 
+  ## Syncing an Existing Machine
+
+  ### Pulling Latest Changes
+
+  If you updated your dotfiles on one machine and want to sync another:
+
+  ```bash
+  dotfiles pull
+  ```
+
+  ### After a History Rewrite (e.g., removing secrets with git filter-repo)
+
+  If the remote history was rewritten (force-pushed), a normal `dotfiles pull` will fail. Re-sync with:
+
+  ```bash
+  dotfiles fetch origin
+  dotfiles reset --hard origin/main
+  ```
+
+  **Warning:** This discards any local uncommitted changes to tracked files. Commit or back up local changes first.
+
   ## Important Notes
 
   ### About Tracking New Files
@@ -295,9 +325,11 @@
 
   ### Security Best Practices
 
-  - **Never commit sensitive files** (SSH keys, API tokens, credentials)
+  - **Never commit sensitive files** (SSH keys, API tokens, credentials, `.gitconfig`)
   - Review `.gitignore` to ensure exclusions are comprehensive
-  - Before committing, review with `dotfiles status` and `dotfiles diff`
+  - **Always run `dotfiles diff` before committing** to review exactly what changed
+  - Use `dotfiles status` to see which files are staged
+  - Avoid hardcoding paths with your username (e.g., `/Users/yourname/`) — use `$HOME` instead
   - Consider making repo private if you're unsure about security
 
   ### What to Track vs Not Track
@@ -306,10 +338,10 @@
   - Shell configs (`.zshrc`, `.bashrc`)
   - Editor configs (`~/.config/nvim/`, `.vimrc`)
   - Terminal configs (`~/.config/iterm2/`, `.tmux.conf`)
-  - Git config (`.gitconfig`)
   - Tool configs (`~/.config/gh/`, `.p10k.zsh`)
 
   **Don't track:**
+  - Git config (`.gitconfig`) - contains your name and email
   - History files (`.zsh_history`, `.bash_history`)
   - SSH keys (`.ssh/id_*`, `.ssh/*_rsa`)
   - Cache directories (`.oh-my-zsh/`, `.npm/`, `.cargo/`)
@@ -357,7 +389,7 @@
   ```bash
   mkdir -p ~/.dotfiles-backup
   dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
-    xargs -I{} mv {} ~/.dotfiles-backup/{}
+    xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname "{}") && mv {} ~/.dotfiles-backup/{}'
   dotfiles checkout
   ```
 
@@ -377,17 +409,40 @@
 
   ### How to remove a file from Git history (if you committed secrets)
 
+  **Rotate any exposed credentials immediately**, then remove the file from history.
+
   **This rewrites history - only do this if necessary:**
 
-  ```bash
-  dotfiles filter-branch --force --index-filter \
-    "git rm --cached --ignore-unmatch path/to/sensitive-file" \
-    --prune-empty --tag-name-filter cat -- --all
+  Install `git-filter-repo` if you don't have it:
 
-  dotfiles push origin --force --all
+  ```bash
+  brew install git-filter-repo
   ```
 
-  **Better approach:** Rotate any exposed credentials immediately, then remove from history.
+  Since bare repos don't work directly with `git-filter-repo`, clone, rewrite, and force-push:
+
+  ```bash
+  # Clone your repo normally into a temp directory
+  git clone https://github.com/yourusername/dotfiles.git /tmp/dotfiles-cleanup
+  cd /tmp/dotfiles-cleanup
+
+  # Remove the sensitive file from all commits
+  git filter-repo --invert-paths --path .gitconfig
+
+  # Force-push the rewritten history
+  git remote add origin https://github.com/yourusername/dotfiles.git
+  git push origin main --force
+
+  # Clean up
+  rm -rf /tmp/dotfiles-cleanup
+  ```
+
+  Then re-sync your bare repo (see [Syncing an Existing Machine](#syncing-an-existing-machine)):
+
+  ```bash
+  dotfiles fetch origin
+  dotfiles reset --hard origin/main
+  ```
 
   ## Resources
 
