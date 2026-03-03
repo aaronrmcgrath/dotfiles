@@ -1,8 +1,6 @@
 
 
 
--- leader key: space bar
-vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
 
@@ -66,7 +64,7 @@ vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left>
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>")
 -- opens searchable quick list of projects to open
 -- maybe doesn't work, need tmux??
--- vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
+vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
 
 
 
@@ -125,7 +123,6 @@ vim.keymap.set("n", "<leader>ls", function()
 end, { desc = "Show LSP Status" })
 
 -- Prose writing keybindings
-vim.keymap.set("n", "<leader>mp", "<cmd>MarkdownPreviewToggle<CR>", { desc = "Toggle Markdown Preview" })
 vim.keymap.set("n", "<leader>ps", function()
     vim.cmd("PencilSoft")
 end, { desc = "Enable Pencil Soft Wrap" })
@@ -139,6 +136,7 @@ end, { desc = "Disable Pencil" })
 -- Quick spell correction
 vim.keymap.set("n", "<C-s>", "[s1z=<c-o>", { desc = "Fix spelling (top suggestion)" })
 vim.keymap.set("i", "<C-s>", "<c-g>u<Esc>[s1z=`]A<c-g>u", { desc = "Fix spelling in insert mode" })
+
 
 
 

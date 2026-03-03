@@ -69,6 +69,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
+vim.opt.ttimeoutlen = 0
 
 vim.opt.colorcolumn = "95"
 
@@ -92,6 +93,15 @@ vim.diagnostic.config({
         header = "",
         prefix = "",
     },
+})
+
+-- Spell checking for prose files
+autocmd("FileType", {
+    pattern = { "markdown", "text", "tex", "gitcommit" },
+    callback = function()
+        vim.opt_local.spell = true
+        vim.opt_local.spelllang = "en_us"
+    end,
 })
 
 

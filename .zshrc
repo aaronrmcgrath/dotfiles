@@ -83,12 +83,12 @@ alias cl="clear"
 alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
 # DIRECTORY ALIASES/SHORTCUTS
-alias ez="nvim .zshrc"
+alias ez="nvim ~/.zshrc"
 alias nvd="cd ~/.config/nvim/"
 
 # PROJECT ALIASES
 alias arm="cd ~/Documents/Atom_Projects/personal_website/"
-alias trippin="cd ~/Documents/Atom_Projects/Projects/trippin/"
+alias trippn="cd ~/Projects/repos/trippin/"
 alias garden="cd ~/Documents/Atom_Projects/Projects/home_grown/homegrownv2/"
 
 export NVM_DIR="$HOME/.nvm"

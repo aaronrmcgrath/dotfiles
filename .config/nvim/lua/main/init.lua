@@ -1,6 +1,10 @@
 
 
 
+-- Set leader keys before anything else (required before lazy and keymaps)
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+
 -- REQUIRE OTHER CONFIG FILES
 require("main.remap")
 require("main.set")
@@ -26,12 +30,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Make sure to setup `mapleader` and `maplocalleader` before
--- loading lazy.nvim so that mappings are correct.
--- This is also a good place to setup other settings (vim.opt)
-vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
-
 -- Setup lazy.nvim
 require("lazy").setup({
   spec = {
@@ -44,9 +42,6 @@ require("lazy").setup({
   -- automatically check for plugin updates
   checker = { enabled = true },
 })
-
--- REQUIRES/SETUP
-require("lazy").setup("plugins")
 
 
 
