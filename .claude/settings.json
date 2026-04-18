@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "godot": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "godot-mcp"
+      ],
+      "env": {
+        "GODOT_PATH": "godot"
+      }
+    },
+    "mempalace": {
+      "command": "/home/aaronmcgrath/.local/share/pipx/venvs/mempalace/bin/python",
+      "args": ["-m", "mempalace.mcp_server", "--palace", "/home/aaronmcgrath/.ai/palace"],
+      "env": {
+        "ANONYMIZED_TELEMETRY": "False"
+      }
+    }
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/aaronmcgrath/.local/bin/mempalace --palace /home/aaronmcgrath/.ai/palace hook run --hook stop --harness claude-code"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/aaronmcgrath/.local/bin/mempalace --palace /home/aaronmcgrath/.ai/palace hook run --hook precompact --harness claude-code"
+          }
+        ]
+      }
+    ]
+  }
+}

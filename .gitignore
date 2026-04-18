@@ -32,6 +32,15 @@ node_modules/
 # Bare repo
 .dotfiles/
 
+# AI config — generated/compiled outputs (source lives in ~/.ai/)
+.ai/machine.md
+.ai/palace/*.sqlite3
+.ai/palace/chroma/
+AGENTS.md
+.claude/skills/
+.claude/agents/
+.claude/commands/
+
 # Tool installs
 .fly/
 

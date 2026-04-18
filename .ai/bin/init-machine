@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Detects host environment and writes ~/.ai/machine.md
+# Safe to re-run: only dynamic fields (date) change.
+
+set -euo pipefail
+
+OUT="$HOME/.ai/machine.md"
+
+detect_distro() {
+  if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    echo "${PRETTY_NAME:-$ID}"
+  elif command -v sw_vers &>/dev/null; then
+    echo "macOS $(sw_vers -productVersion)"
+  else
+    echo "unknown"
+  fi
+}
+
+detect_shell() {
+  basename "${SHELL:-unknown}"
+}
+
+detect_tools() {
+  local tools=()
+  local candidates=(git gh curl wget jq fzf ripgrep fd bat eza zoxide tmux nvim vim node npm pnpm bun php composer python3 pip3 go rustc cargo docker podman aws gcloud az kubectl helm terraform)
+  for t in "${candidates[@]}"; do
+    command -v "$t" &>/dev/null && tools+=("$t")
+  done
+  printf '%s\n' "${tools[@]}" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g'
+}
+
+detect_term() {
+  echo "${TERM_PROGRAM:-${TERM:-unknown}}"
+}
+
+cat > "$OUT" <<EOF
+# Machine: $(hostname -s)
+
+Generated: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+## System
+
+- **Host:** $(hostname -f 2>/dev/null || hostname)
+- **OS:** $(detect_distro)
+- **Kernel:** $(uname -r)
+- **Arch:** $(uname -m)
+- **Shell:** $(detect_shell) ($(${SHELL:-sh} --version 2>&1 | head -1))
+- **Terminal:** $(detect_term)
+
+## Installed Tools
+
+$(detect_tools)
+
+## Paths
+
+- **Home:** $HOME
+- **Config:** ${XDG_CONFIG_HOME:-$HOME/.config}
+- **Data:** ${XDG_DATA_HOME:-$HOME/.local/share}
+EOF
+
+echo "Wrote $OUT"

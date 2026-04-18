@@ -16,13 +16,13 @@ return {
             require("mason-lspconfig").setup({
                 ensure_installed = {
                     "lua_ls",
-                    "csharp_ls",
+                    -- "csharp_ls",     -- requires dotnet
                     "intelephense",
                     "eslint",
                     "ts_ls",
                     "gopls",
                     "basedpyright",
-                    "ltex",
+                    -- "ltex",          -- requires java
                 },
                 automatic_installation = false
             })
@@ -68,27 +68,27 @@ return {
                 }
             }
 
-            vim.lsp.config.csharp_ls = {
-                capabilities = capabilities,
-                root_markers = { "*.sln", "*.csproj", ".git" },
-                init_options = {
-                    AutomaticWorkspaceInit = true,
-                    FeatureFlags = {
-                        semanticHighlighting = true,
-                        references = true,
-                        definition = true,
-                        completion = {
-                            filteredTypes = { "System.String" }
-                        }
-                    }
-                },
-                enable_roslyn_analyzers = true,
-                analyze_open_documents_only = false,
-                enable_import_completion = true,
-            }
+            -- vim.lsp.config.csharp_ls = {   -- requires dotnet
+            --     capabilities = capabilities,
+            --     root_markers = { "*.sln", "*.csproj", ".git" },
+            --     init_options = {
+            --         AutomaticWorkspaceInit = true,
+            --         FeatureFlags = {
+            --             semanticHighlighting = true,
+            --             references = true,
+            --             definition = true,
+            --             completion = {
+            --                 filteredTypes = { "System.String" }
+            --             }
+            --         }
+            --     },
+            --     enable_roslyn_analyzers = true,
+            --     analyze_open_documents_only = false,
+            --     enable_import_completion = true,
+            -- }
 
             -- Enable all configured LSP servers
-            vim.lsp.enable({ "lua_ls", "ts_ls", "intelephense", "gopls", "basedpyright", "csharp_ls" })
+            vim.lsp.enable({ "lua_ls", "ts_ls", "intelephense", "gopls", "basedpyright" })
 
             -- for dotnet development, uncomment here if you need better linting with C#
             -- vim.lsp.config.sonarlint = {

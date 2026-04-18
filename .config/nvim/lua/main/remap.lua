@@ -51,11 +51,9 @@ vim.keymap.set("n", "<leader>rn", "<cmd>set rnu<CR>")
 --vnoremap <Leader>yy "*yy
 -- alternative pastes
 -- leader-y selects highlighted text to global clipboard while in visual mode
-vim.keymap.set("v", "<leader>y", "\"*y")
--- leader-y-y selects current line to clipboard -- may be broken right now
-vim.keymap.set("n", "<leader>yy", "\"*yy")
--- leader-y-y selects current line to clipboard -- may be broken right now
-vim.keymap.set("n", "<leader>yy", "\"*yy")
+vim.keymap.set("v", "<leader>y", "\"+y")
+-- leader-y-y selects current line to clipboard
+vim.keymap.set("n", "<leader>yy", "\"+yy")
 -- open %s (search | /) in command mode (:) and uses current word your cursor
 -- is on to search and replace
 vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")

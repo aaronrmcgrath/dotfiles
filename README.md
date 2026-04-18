@@ -1,461 +1,538 @@
-  # Dotfiles
+# Dotfiles
 
-  My personal dotfiles managed using a bare Git repository. This approach keeps configuration files in their proper locations without symlinks.
+My personal dotfiles managed using a bare Git repository. This approach keeps configuration files in their proper locations without symlinks.
 
-  ## Table of Contents
+## Table of Contents
 
-  - [Quick Start](#quick-start)
-  - [Initial Setup (First Time)](#initial-setup-first-time)
-  - [Daily Usage](#daily-usage)
-  - [Adding Files and Directories](#adding-files-and-directories)
-  - [Setting Up on a New Machine](#setting-up-on-a-new-machine)
-  - [Syncing an Existing Machine](#syncing-an-existing-machine)
-  - [Important Notes](#important-notes)
-  - [Troubleshooting](#troubleshooting)
+- [Quick Start](#quick-start)
+- [Prerequisites](#prerequisites)
+- [Initial Setup (First Time)](#initial-setup-first-time)
+- [Setting Up on a New Machine](#setting-up-on-a-new-machine)
+- [Syncing an Existing Machine](#syncing-an-existing-machine)
+- [Sharing Changes](#sharing-changes)
+- [Daily Usage](#daily-usage)
+- [Adding Files and Directories](#adding-files-and-directories)
+- [AI Config Layer](#ai-config-layer)
+- [Important Notes](#important-notes)
+- [Troubleshooting](#troubleshooting)
 
-  ## Quick Start
+## Quick Start
 
-  This dotfiles setup uses a **bare Git repository** with your home directory as the work tree. No symlinks required!
+This dotfiles setup uses a **bare Git repository** with your home directory as the work tree. No symlinks required!
 
-  **Key concept:** The `dotfiles` command is an alias that works exactly like `git`, but manages files in your home directory using a hidden `.dotfiles` repository.
+**Key concept:** The `dotfiles` command is an alias that works exactly like `git`, but manages files in your home directory using a hidden `.dotfiles` repository.
 
-  ## Initial Setup (First Time)
+## Prerequisites
 
-  ### 1. Create a GitHub Repository
+Install these before setting up on a new machine.
 
-  1. Go to [GitHub](https://github.com/new)
-  2. Create a new repository named `dotfiles`
-  3. Choose **Public** (we'll exclude sensitive files via `.gitignore`)
-  4. **Do not** initialize with README, .gitignore, or license
-  5. Copy the repository URL (e.g., `https://github.com/yourusername/dotfiles.git`)
+### Shell & core tools
 
-  ### 2. Initialize Bare Git Repository Locally
+> **macOS:**
+> ```bash
+> brew install git tmux fzf fortune
+> ```
 
-  ```bash
-  # Create a bare repository in your home directory
-  git init --bare $HOME/.dotfiles
-  ```
+> **Linux (Ubuntu/Pop!_OS):**
+> ```bash
+> sudo apt install -y git zsh tmux fzf fortune-mod python3-venv
+> ```
 
-  This creates `~/.dotfiles/` containing only Git metadata (no working directory).
+### Neovim
 
-  ### 3. Create the Dotfiles Alias
+> **macOS:** `brew install neovim` (stays current)
 
-  Add this to your `~/.zshrc` (or `~/.bashrc` if using Bash):
+> **Linux:** `apt install neovim` gives v0.9.5 — too old. Install via AppImage instead:
+> ```bash
+> curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+> chmod u+x nvim-linux-x86_64.appimage
+> sudo mv nvim-linux-x86_64.appimage /usr/local/bin/nvim
+> ```
 
-  ```bash
-  alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-  ```
+### Node (via nvm)
 
-  Then reload your shell:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh | bash
+nvm install --lts
+```
 
-  ```bash
-  source ~/.zshrc
-  ```
+> **Linux:** If you use nvim plugins with build steps (e.g. `markdown-preview.nvim`), symlink node/npm system-wide so nvim's non-interactive build runner can find them:
+> ```bash
+> NODE_BIN="$(nvm which current)"
+> sudo ln -sf "$NODE_BIN" /usr/local/bin/node
+> sudo ln -sf "$(dirname $NODE_BIN)/npm" /usr/local/bin/npm
+> ```
 
-  **What this alias does:**
-  - `--git-dir=$HOME/.dotfiles/` - Use `.dotfiles` as the Git repository
-  - `--work-tree=$HOME` - Use your home directory as the working tree
+### Oh My Zsh
 
-  ### 4. Configure the Repository
+```bash
+RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
 
-  Hide untracked files (prevents `dotfiles status` from showing every file in your home directory):
+> **Important:** The oh-my-zsh installer overwrites `~/.zshrc`. Re-checkout your dotfiles version immediately after:
+> ```bash
+> dotfiles checkout -- .zshrc
+> ```
 
-  ```bash
-  dotfiles config --local status.showUntrackedFiles no
-  ```
+### Nerd Font
 
-  ### 5. Create a .gitignore
+Download [JetBrainsMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases) and install:
 
-  Create `~/.gitignore` to exclude sensitive files:
+> **macOS:** `brew install --cask font-jetbrains-mono-nerd-font`
 
-  ```bash
-  # Sensitive files
-  .gitconfig
-  .ssh/*_rsa
-  .ssh/*_rsa.pub
-  .ssh/id_*
-  .ssh/known_hosts
-  .netrc
-  .aws/credentials
-  .claude.json*
-  .env
+> **Linux:** Extract to `~/.local/share/fonts/` then run `fc-cache -fv`. Verify with `fc-list | grep -i jetbrains` — the registered family name is `JetBrainsMono Nerd Font`. Use this exact string in `alacritty.toml`.
 
-  # History and cache files
-  .zsh_history
-  .bash_history
-  .zcompdump*
-  .viminfo
-  .lesshst
-  .psql_history
-  .python_history
-  .node_repl_history
+### pipx + mempalace (AI memory — optional)
 
-  # Package managers and large directories
-  .oh-my-zsh/
-  .nvm/
-  .npm/
-  .node-gyp/
-  .rbenv/
-  .composer/
-  .cargo/
-  node_modules/
+```bash
+pip3 install --user pipx
+pipx install mempalace
+```
 
-  # Bare repo
-  .dotfiles/
+---
 
-  # Tool installs
-  .fly/
+## Initial Setup (First Time)
 
-  # OS files
-  .DS_Store
-  .Trash/
-  ```
+### 1. Create a GitHub Repository
 
-  Then track the .gitignore:
+1. Go to [GitHub](https://github.com/new) and create a repo named `dotfiles`
+2. Choose **Public** (sensitive files are excluded via `.gitignore`)
+3. **Do not** initialize with README, .gitignore, or license
+4. Copy the repository URL
 
-  ```bash
-  dotfiles add ~/.gitignore
-  dotfiles commit -m "Add .gitignore"
-  ```
+### 2. Initialize Bare Git Repository Locally
 
-  ### 6. Add Your Configuration Files
+```bash
+git init --bare $HOME/.dotfiles
+```
 
-  Start with essential files:
+### 3. Create the Dotfiles Alias
 
-  ```bash
-  # Add shell configuration
-  dotfiles add ~/.zshrc
+Add this to your `~/.zshrc` (or `~/.bashrc`):
 
-  # Add entire Neovim configuration directory
-  dotfiles add ~/.config/nvim/
+```bash
+alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+```
 
-  # Add this README
-  dotfiles add ~/README.md
+Then reload: `source ~/.zshrc`
 
-  # Check what will be committed
-  dotfiles status
-  ```
+### 4. Configure the Repository
 
-  ### 7. Make Your First Commit
+```bash
+dotfiles config --local status.showUntrackedFiles no
+```
 
-  ```bash
-  dotfiles commit -m "Initial commit: zsh and nvim configuration"
-  ```
+### 5. Create a .gitignore
 
-  ### 8. Connect to GitHub and Push
+Create `~/.gitignore` to exclude sensitive and generated files. See [What to Track vs Not Track](#what-to-track-vs-not-track) for the full list. Then track it:
 
-  ```bash
-  # Add your GitHub repository as remote
-  dotfiles remote add origin https://github.com/yourusername/dotfiles.git
+```bash
+dotfiles add ~/.gitignore
+dotfiles commit -m "Add .gitignore"
+```
 
-  # Push to GitHub
-  dotfiles branch -M main
-  dotfiles push -u origin main
-  ```
+### 6. Add Your Configuration Files
 
-  ## Daily Usage
+```bash
+dotfiles add ~/.zshrc
+dotfiles add ~/.config/nvim/
+dotfiles add ~/README.md
+dotfiles status
+```
 
-  The `dotfiles` command works exactly like `git`:
+### 7. Make Your First Commit
 
-  ```bash
-  # Check status
-  dotfiles status
+```bash
+dotfiles commit -m "Initial commit: zsh and nvim configuration"
+```
 
-  # Review changes before committing
-  dotfiles diff
+### 8. Connect to GitHub and Push
 
-  # Add a file
-  dotfiles add ~/.zshrc
+```bash
+dotfiles remote add origin https://github.com/yourusername/dotfiles.git
+dotfiles branch -M main
+dotfiles push -u origin main
+```
 
-  # Commit changes
-  dotfiles commit -m "Update shell configuration"
+---
 
-  # Push to GitHub
-  dotfiles push
+## Setting Up on a New Machine
 
-  # Pull changes from another machine
-  dotfiles pull
+### Step 1 — Install prerequisites
 
-  # View commit history
-  dotfiles log
+See [Prerequisites](#prerequisites) above. At minimum: git, zsh, neovim, tmux, fzf, oh-my-zsh, Nerd Font.
 
-  # See what's tracked
-  dotfiles ls-tree --full-tree -r --name-only HEAD
-  ```
+### Step 2 — Clone the dotfiles repo
 
-  ## Adding Files and Directories
+```bash
+git clone --bare https://github.com/aaronrmcgrath/dotfiles.git $HOME/.dotfiles
+```
 
-  ### Adding Individual Files
+### Step 3 — Define the alias (temporary)
 
-  ```bash
-  dotfiles add ~/.p10k.zsh
-  dotfiles add ~/.tmux.conf
-  dotfiles commit -m "Add powerlevel10k and tmux config"
-  dotfiles push
-  ```
+```bash
+alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+```
 
-  ### Adding Entire Directories
+### Step 4 — Checkout the files
 
-  ```bash
-  # Add all files in a directory recursively
-  dotfiles add ~/.config/nvim/
+```bash
+dotfiles checkout
+```
 
-  # Add multiple directories
-  dotfiles add ~/.config/gh/
-  dotfiles add ~/.config/iterm2/
+If checkout fails due to conflicts, back up the conflicting files first:
 
-  dotfiles commit -m "Add editor and terminal configurations"
-  dotfiles push
-  ```
+```bash
+mkdir -p ~/.dotfiles-backup
+dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
+  xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname "{}") && mv {} ~/.dotfiles-backup/{}'
+dotfiles checkout
+```
 
-  ### Important: Tracking New Files
+> **Oh My Zsh users:** If you installed oh-my-zsh before checking out dotfiles, the installer overwrote `~/.zshrc`. Re-checkout it:
+> ```bash
+> dotfiles checkout -- .zshrc
+> ```
 
-  **Git only tracks files you explicitly add.** After the initial `dotfiles add`, new files you create won't be automatically tracked.
+### Step 5 — Configure the repository
 
-  ```bash
-  # Create a new file in nvim config
-  nvim ~/.config/nvim/lua/plugins/new-plugin.lua
+```bash
+dotfiles config --local status.showUntrackedFiles no
+```
 
-  # This new file is NOT tracked yet
-  dotfiles status  # Won't show the new file
+### Step 6 — Set zsh as default shell
 
-  # You must add it explicitly
-  dotfiles add ~/.config/nvim/lua/plugins/new-plugin.lua
-  # OR re-add the entire directory
-  dotfiles add ~/.config/nvim/
+> **macOS:** `chsh -s $(which zsh)`
 
-  dotfiles commit -m "Add new neovim plugin"
-  dotfiles push
-  ```
+> **Linux (Pop!_OS/Ubuntu):** `chsh` often fails with a PAM authentication error. Use `usermod` instead:
+> ```bash
+> sudo usermod -s /usr/bin/zsh $USER
+> ```
+> Log out and back in for the change to take effect.
 
-  **Pro tip:** If you frequently add files to a directory like `~/.config/nvim/`, you can re-run `dotfiles add ~/.config/nvim/` periodically to pick up new files.
+### Step 7 — Bootstrap the AI config layer
 
-  ## Setting Up on a New Machine
+```bash
+~/.ai/bin/init-machine         # generates ~/.ai/machine.md for this host
+~/.ai/bin/compile-ai-config    # emits ~/AGENTS.md, SKILL.md files, symlinks
+```
 
-  ### Prerequisites
+Then set up MemPalace local memory:
 
-  Install these first:
-  - Git
-  - Your shell (zsh/bash)
-  - Any tools your dotfiles configure (neovim, etc.)
+```bash
+pipx install mempalace
+mempalace init ~/.ai/palace              # accept proposed rooms
+mempalace --palace ~/.ai/palace mine ~/.ai/
+```
 
-  ### Setup Steps
+The MCP server and hooks are already configured in tracked `~/.claude/settings.json` — no extra steps needed.
 
-  #### 1. Clone the Dotfiles Repository as a Bare Repo
+### Step 8 — Reload your shell and verify
 
-  ```bash
-  # Clone your dotfiles as a bare repository
-  git clone --bare https://github.com/yourusername/dotfiles.git $HOME/.dotfiles
-  ```
+```bash
+source ~/.zshrc
+nvim --version              # should be 0.11+
+dotfiles status             # should be clean
+mempalace --palace ~/.ai/palace status   # should show drawers
+```
 
-  #### 2. Define the Dotfiles Alias (Temporary)
+---
 
-  ```bash
-  # Create a temporary alias for this session
-  alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-  ```
+## Syncing an Existing Machine
 
-  #### 3. Checkout the Files
+### Pull latest changes
 
-  ```bash
-  # Backup any existing conflicting files
-  mkdir -p .dotfiles-backup
+```bash
+dotfiles pull
+```
 
-  # Checkout the dotfiles
-  dotfiles checkout
+### After pulling AI config changes
 
-  # If checkout fails due to conflicts, backup those files:
-  dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
-    xargs -I{} sh -c 'mkdir -p .dotfiles-backup/$(dirname "{}") && mv {} .dotfiles-backup/{}'
+If `~/.ai/` content changed (new agents, skills, commands, or `user.md` updates):
 
-  # Try checkout again
-  dotfiles checkout
-  ```
+```bash
+~/.ai/bin/compile-ai-config    # regenerate AGENTS.md, SKILL.md, symlinks
+```
 
-  #### 4. Configure the Repository
+If only `machine.md` needs a refresh (OS updated, tools added):
 
-  ```bash
-  # Hide untracked files
-  dotfiles config --local status.showUntrackedFiles no
-  ```
+```bash
+~/.ai/bin/init-machine
+```
 
-  #### 5. Reload Your Shell
+Compiled and generated files (`~/AGENTS.md`, `~/.ai/machine.md`, `~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/commands/`) are not tracked — they're rebuilt from source on each machine.
 
-  ```bash
-  # The dotfiles alias is now in your .zshrc (which was just checked out)
-  source ~/.zshrc
+### After a history rewrite (e.g., removing secrets)
 
-  # The alias is now permanent!
-  ```
+If the remote history was force-pushed, a normal `dotfiles pull` will fail:
 
-  #### 6. Verify Setup
+```bash
+dotfiles fetch origin
+dotfiles reset --hard origin/main
+```
 
-  ```bash
-  # Check status
-  dotfiles status
+> **Warning:** This discards any local uncommitted changes to tracked files. Commit or back up first.
 
-  # List all tracked files
-  dotfiles ls-tree --full-tree -r --name-only HEAD
-  ```
+---
 
-  You're done! Your dotfiles are now managed on the new machine.
+## Sharing Changes
 
-  ## Syncing an Existing Machine
+### Making changes on one machine and syncing to another
 
-  ### Pulling Latest Changes
+```bash
+# Machine A — after editing a dotfile:
+dotfiles add ~/.zshrc
+dotfiles commit -m "update: add flyctl alias"
+dotfiles push
 
-  If you updated your dotfiles on one machine and want to sync another:
+# Machine B:
+dotfiles pull
+source ~/.zshrc   # or restart shell
+```
 
-  ```bash
-  dotfiles pull
-  ```
+### What gets synced vs what doesn't
 
-  ### After a History Rewrite (e.g., removing secrets with git filter-repo)
+**Tracked (syncs via git):** source files in `~/.ai/`, `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, nvim config, shell config, terminal config.
 
-  If the remote history was rewritten (force-pushed), a normal `dotfiles pull` will fail. Re-sync with:
+**Not tracked (rebuilt per machine):** `~/.ai/machine.md`, `~/AGENTS.md`, `~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/commands/`, MemPalace vector data (`~/.ai/palace/*.sqlite3`, `~/.ai/palace/chroma/`).
 
-  ```bash
-  dotfiles fetch origin
-  dotfiles reset --hard origin/main
-  ```
+Run `~/.ai/bin/compile-ai-config` after pulling if AI config changed.
 
-  **Warning:** This discards any local uncommitted changes to tracked files. Commit or back up local changes first.
+---
 
-  ## Important Notes
+## Daily Usage
 
-  ### About Tracking New Files
+The `dotfiles` command works exactly like `git`:
 
-  - **Git doesn't auto-track new files** - You must explicitly `dotfiles add` them
-  - After adding files to a tracked directory, run `dotfiles add <directory>` again to pick them up
-  - Use `dotfiles status` to see modified files (but it won't show new untracked files by design)
+```bash
+dotfiles status                                    # check modified tracked files
+dotfiles diff                                      # review changes
+dotfiles add ~/.zshrc                              # stage a file
+dotfiles commit -m "Update shell config"           # commit
+dotfiles push                                      # push to GitHub
+dotfiles pull                                      # pull from GitHub
+dotfiles log                                       # commit history
+dotfiles ls-tree --full-tree -r --name-only HEAD   # list all tracked files
+```
 
-  ### Security Best Practices
+---
 
-  - **Never commit sensitive files** (SSH keys, API tokens, credentials, `.gitconfig`)
-  - Review `.gitignore` to ensure exclusions are comprehensive
-  - **Always run `dotfiles diff` before committing** to review exactly what changed
-  - Use `dotfiles status` to see which files are staged
-  - Avoid hardcoding paths with your username (e.g., `/Users/yourname/`) — use `$HOME` instead
-  - Consider making repo private if you're unsure about security
+## Adding Files and Directories
 
-  ### What to Track vs Not Track
+### Individual files
 
-  **Good to track:**
-  - Shell configs (`.zshrc`, `.bashrc`)
-  - Editor configs (`~/.config/nvim/`, `.vimrc`)
-  - Terminal configs (`~/.config/iterm2/`, `.tmux.conf`)
-  - Tool configs (`~/.config/gh/`, `.p10k.zsh`)
+```bash
+dotfiles add ~/.tmux.conf
+dotfiles commit -m "Add tmux config"
+dotfiles push
+```
 
-  **Don't track:**
-  - Git config (`.gitconfig`) - contains your name and email
-  - History files (`.zsh_history`, `.bash_history`)
-  - SSH keys (`.ssh/id_*`, `.ssh/*_rsa`)
-  - Cache directories (`.oh-my-zsh/`, `.npm/`, `.cargo/`)
-  - API tokens/credentials (`.netrc`, `.aws/credentials`)
-  - Package manager directories (`node_modules/`, `vendor/`)
+### Entire directories
 
-  ### Managing Oh-My-Zsh and Plugins
+```bash
+dotfiles add ~/.config/nvim/
+dotfiles add ~/.config/fastfetch/
+dotfiles commit -m "Add editor and terminal configurations"
+dotfiles push
+```
 
-  **Don't track Oh-My-Zsh itself** - it's large and can be easily reinstalled:
+### Important: new files in tracked directories aren't auto-tracked
 
-  ```bash
-  # On a new machine, install Oh-My-Zsh first
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+**Git only tracks files you explicitly add.** After the initial `dotfiles add`, new files you create won't be automatically tracked.
 
-  # Then checkout your dotfiles (which include .zshrc with your plugin configs)
-  ```
+```bash
+# New file created — NOT tracked yet:
+nvim ~/.config/nvim/lua/plugins/new-plugin.lua
 
-  **If you have custom themes/plugins**, you might track:
-  - `~/.oh-my-zsh/custom/` (your custom plugins and themes only)
+# Must add explicitly:
+dotfiles add ~/.config/nvim/lua/plugins/new-plugin.lua
+# or re-add the whole directory:
+dotfiles add ~/.config/nvim/
+```
 
-  ## Troubleshooting
+---
 
-  ### "Too many files" when running `dotfiles status`
+## AI Config Layer
 
-  If you forgot to run the config command:
+`~/.ai/` is a vendor-neutral source of truth for AI assistant configuration, tracked in this repo alongside the rest of the dotfiles.
 
-  ```bash
-  dotfiles config --local status.showUntrackedFiles no
-  ```
+### Structure
 
-  ### Files aren't being tracked after adding them
+```
+~/.ai/
+  user.md             your role, preferences, and collaboration style
+  machine.md          auto-generated per host (gitignored)
+  init.md             design principles and layer map
+  bin/
+    init-machine      generates machine.md for the current host
+    compile-ai-config emits AGENTS.md, SKILL.md files, and symlinks
+  skills/domains/     domain skills (php, js, lua) — loaded progressively by Claude
+  agents/             subagent definitions (orchestrator, programmer, tester, etc.)
+  commands/           slash commands (/dev, /plan, /review, /test, /ship, /learn)
+  mcp/
+    servers.json      MCP server definitions (compiled into ~/.claude/settings.json)
+  palace/             MemPalace local AI memory (partially gitignored)
+    mempalace.yaml    wing/room config (tracked)
+    *.sqlite3         vector DB (gitignored — machine-local)
+    chroma/           ChromaDB data (gitignored — machine-local)
+```
 
-  Make sure you committed and pushed:
+### How it works
 
-  ```bash
-  dotfiles status  # Check what's staged
-  dotfiles commit -m "Add new files"
-  dotfiles push
-  ```
+- **Claude Code** reads `~/.claude/CLAUDE.md` which `@`-imports from `~/.ai/`. Agents and commands are symlinked into `~/.claude/agents/` and `~/.claude/commands/`.
+- **Other AI tools** (Aider, Cursor, etc.) consume `~/AGENTS.md`, a compiled concatenation of the same sources.
+- `compile-ai-config` produces all derived outputs. Re-run it after pulling if `~/.ai/` changed.
 
-  ### Checkout fails on new machine due to conflicts
+### MemPalace (local AI memory)
 
-  Backup conflicting files first:
+[MemPalace](https://github.com/mempalace/mempalace) gives the AI a persistent, local vector memory backed by ChromaDB. No API key required.
 
-  ```bash
-  mkdir -p ~/.dotfiles-backup
-  dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
-    xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname "{}") && mv {} ~/.dotfiles-backup/{}'
-  dotfiles checkout
-  ```
+> **Warning:** `github.com/milla-jovovich/mempalace` is a fake/malicious fork — only use the official repo above.
 
-  ### How to see all tracked files
+The MCP server is configured in `~/.claude/settings.json` and starts automatically with Claude Code. Stop/PreCompact hooks auto-save session content to the palace.
 
-  ```bash
-  dotfiles ls-tree --full-tree -r --name-only HEAD
-  ```
+Bootstrap on a new machine: see [Step 7](#step-7--bootstrap-the-ai-config-layer) above.
 
-  ### How to untrack a file (but keep it locally)
+---
 
-  ```bash
-  dotfiles rm --cached ~/.sensitive-file
-  dotfiles commit -m "Stop tracking sensitive file"
-  dotfiles push
-  ```
+## Important Notes
 
-  ### How to remove a file from Git history (if you committed secrets)
+### What to Track vs Not Track
 
-  **Rotate any exposed credentials immediately**, then remove the file from history.
+**Good to track:**
+- Shell configs (`.zshrc`, `.bashrc`)
+- Editor configs (`~/.config/nvim/`)
+- Terminal configs (`~/.config/alacritty/alacritty.toml`, `~/.tmux.conf`)
+- Prompt config (`~/.config/starship.toml`)
+- System info config (`~/.config/fastfetch/`)
+- AI config source (`~/.ai/` — excluding `machine.md` and `palace/` data)
+- Claude Code config (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`)
 
-  **This rewrites history - only do this if necessary:**
+**Don't track:**
+- Git config (`.gitconfig`) — contains name and email
+- History files (`.zsh_history`, `.bash_history`)
+- SSH keys (`.ssh/id_*`)
+- Oh My Zsh installation (`.oh-my-zsh/`) — reinstall from script
+- nvm installation (`.nvm/`) — reinstall from script
+- Cache directories (`.npm/`, `.cargo/`)
+- API tokens/credentials (`.netrc`, `.aws/credentials`, `.claude.json`)
+- AI-generated/compiled outputs (`AGENTS.md`, `~/.ai/machine.md`, `~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/commands/`)
+- MemPalace vector data (`~/.ai/palace/*.sqlite3`, `~/.ai/palace/chroma/`)
 
-  Install `git-filter-repo` if you don't have it:
+### Security Best Practices
 
-  ```bash
-  brew install git-filter-repo
-  ```
+- **Never commit sensitive files** — SSH keys, API tokens, credentials
+- **Always run `dotfiles diff` before committing** to review exactly what changed
+- Use `dotfiles status` to see which files are staged
+- Avoid hardcoding paths with your username — use `$HOME` instead
+- Consider making the repo private if unsure
 
-  Since bare repos don't work directly with `git-filter-repo`, clone, rewrite, and force-push:
+### About Tracking New Files
 
-  ```bash
-  # Clone your repo normally into a temp directory
-  git clone https://github.com/yourusername/dotfiles.git /tmp/dotfiles-cleanup
-  cd /tmp/dotfiles-cleanup
+- Git doesn't auto-track new files — you must explicitly `dotfiles add` them
+- Re-add a directory (`dotfiles add ~/.config/nvim/`) to pick up new files within it
 
-  # Remove the sensitive file from all commits
-  git filter-repo --invert-paths --path .gitconfig
+### Managing Oh My Zsh and Plugins
 
-  # Force-push the rewritten history
-  git remote add origin https://github.com/yourusername/dotfiles.git
-  git push origin main --force
+**Don't track Oh My Zsh itself** — it's large and easily reinstalled:
 
-  # Clean up
-  rm -rf /tmp/dotfiles-cleanup
-  ```
+```bash
+RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
 
-  Then re-sync your bare repo (see [Syncing an Existing Machine](#syncing-an-existing-machine)):
+If you have custom themes/plugins, you can track `~/.oh-my-zsh/custom/` selectively.
 
-  ```bash
-  dotfiles fetch origin
-  dotfiles reset --hard origin/main
-  ```
+---
 
-  ## Resources
+## Troubleshooting
 
-  - [Atlassian Guide to Dotfiles](https://www.atlassian.com/git/tutorials/dotfiles)
-  - [GitHub Dotfiles](https://dotfiles.github.io/)
-  - [Awesome Dotfiles](https://github.com/webpro/awesome-dotfiles)
+### "Too many files" in `dotfiles status`
 
-  ---
+```bash
+dotfiles config --local status.showUntrackedFiles no
+```
 
-  **Happy configuring! 🚀**
+### Checkout fails on new machine due to conflicts
+
+```bash
+mkdir -p ~/.dotfiles-backup
+dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
+  xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname "{}") && mv {} ~/.dotfiles-backup/{}'
+dotfiles checkout
+```
+
+### `chsh` fails with authentication error (Linux)
+
+```bash
+sudo usermod -s /usr/bin/zsh $USER
+```
+
+### Neovim startup errors on Linux (LSP/Mason failures)
+
+The `apt` package is too old (v0.9.5). Install via AppImage — see [Prerequisites → Neovim](#neovim).
+
+If Mason LSP servers fail to install, check runtime deps:
+- `basedpyright` requires `python3-venv`: `sudo apt install python3-venv`
+- `gopls` requires Go to be installed and in PATH
+- `csharp-language-server` requires `dotnet`
+
+### Alacritty shows wrong or ugly font
+
+The Nerd Font must be installed and registered before Alacritty references it. Verify:
+
+```bash
+fc-list | grep -i jetbrains
+```
+
+The registered family name is `JetBrainsMono Nerd Font` — use this exact string in `alacritty.toml`.
+
+### List all tracked files
+
+```bash
+dotfiles ls-tree --full-tree -r --name-only HEAD
+```
+
+### Untrack a file (keep it locally)
+
+```bash
+dotfiles rm --cached ~/.sensitive-file
+dotfiles commit -m "Stop tracking sensitive file"
+dotfiles push
+```
+
+### Remove a file from Git history (if you committed secrets)
+
+**Rotate any exposed credentials immediately**, then remove from history.
+
+Install `git-filter-repo`:
+
+> **macOS:** `brew install git-filter-repo`
+
+> **Linux:** `pipx install git-filter-repo`
+
+Since bare repos don't work directly with `git-filter-repo`, clone, rewrite, and force-push:
+
+```bash
+git clone https://github.com/aaronrmcgrath/dotfiles.git /tmp/dotfiles-cleanup
+cd /tmp/dotfiles-cleanup
+git filter-repo --invert-paths --path .gitconfig
+git remote add origin https://github.com/aaronrmcgrath/dotfiles.git
+git push origin main --force
+rm -rf /tmp/dotfiles-cleanup
+```
+
+Then re-sync your bare repo:
+
+```bash
+dotfiles fetch origin
+dotfiles reset --hard origin/main
+```
+
+---
+
+## Resources
+
+- [Atlassian Guide to Dotfiles](https://www.atlassian.com/git/tutorials/dotfiles)
+- [GitHub Dotfiles](https://dotfiles.github.io/)
+- [Awesome Dotfiles](https://github.com/webpro/awesome-dotfiles)
+- [MemPalace](https://github.com/mempalace/mempalace)
