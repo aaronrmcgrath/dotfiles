@@ -28,15 +28,27 @@ This directory (`~/.ai/`) is the single source of truth for AI assistant configu
 
 ## Layer Map
 
-| File | Mechanism | Consumer |
-|---|---|---|
-| `user.md` | `@`-import in CLAUDE.md | Claude Code |
-| `machine.md` | `@`-import in CLAUDE.md | Claude Code |
-| `init.md` | `@`-import in CLAUDE.md | Claude Code |
-| `skills/domains/*.md` | compiled → `SKILL.md` | Claude Code (progressive) |
-| `agents/*.md` | symlinked → `~/.claude/agents/` | Claude Code |
-| `commands/*.md` | symlinked → `~/.claude/commands/` | Claude Code |
-| `user.md` + `machine.md` + others | concatenated → `~/AGENTS.md` | All other vendors |
+| File | Tracked | Mechanism | Consumer |
+|---|---|---|---|
+| `user.md` | **gitignored** | `@`-import in CLAUDE.md | Claude Code |
+| `machine.md` | **gitignored** | `@`-import in CLAUDE.md | Claude Code |
+| `init.md` | yes | `@`-import in CLAUDE.md | Claude Code |
+| `example.user.md` | yes | copy → `user.md` on new install | humans |
+| `example.machine.md` | yes | reference for `init-machine` output | humans |
+| `skills/domains/*.md` | yes | compiled → `SKILL.md` | Claude Code (progressive) |
+| `agents/*.md` | yes | symlinked → `~/.claude/agents/` | Claude Code |
+| `commands/*.md` | yes | symlinked → `~/.claude/commands/` | Claude Code |
+| `user.md` + `machine.md` + others | — | concatenated → `~/AGENTS.md` | All other vendors |
+
+## New Machine Setup
+
+```bash
+cp ~/.ai/example.user.md ~/.ai/user.md   # then edit with your details
+bin/init-machine                          # generates machine.md from system info
+```
+
+`user.md` and `machine.md` are gitignored — they contain personal/machine-specific data
+and must never be committed to a public repo.
 
 ## Extending
 

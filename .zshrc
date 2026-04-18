@@ -55,6 +55,7 @@ else
   eval "$(starship init zsh)"
 fi
 
+
 # fastfetch on shell start
 command -v fastfetch &>/dev/null && fastfetch
 
@@ -73,10 +74,8 @@ alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias ez="nvim ~/.zshrc"
 alias nvd="cd ~/.config/nvim/"
 
-# PROJECT ALIASES
-alias arm="cd ~/Documents/Atom_Projects/personal_website/"
-alias trippn="cd ~/Projects/repos/trippin/"
-alias garden="cd ~/Documents/Atom_Projects/Projects/home_grown/homegrownv2/"
+# Machine-local aliases (gitignored)
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
